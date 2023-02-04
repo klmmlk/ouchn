@@ -1,14 +1,4 @@
-/**
- * DES加密/解密
- * @Copyright Copyright (c) 2006
- * @author Guapo
- * @see DESCore
- */
-
-/*
- * encrypt the string to string made up of hex
- * return the encrypted string
- */
+//将以下JS代码转为python代码，分成五段分别给我
 function strEnc(data,firstKey,secondKey,thirdKey){
 
     var leng = data.length;
@@ -167,12 +157,6 @@ function strEnc(data,firstKey,secondKey,thirdKey){
     return encData;
 }
 
-/*
- * decrypt the encrypted string to the original string
- *
- * return  the original string
- */
-
 function getKeyBytes(key){
     var keyBytes = new Array();
     var leng = key.length;
@@ -188,11 +172,6 @@ function getKeyBytes(key){
     return keyBytes;
 }
 
-/*
- * chang the string(it's length <= 4) into the bit array
- *
- * return bit array(it's length = 64)
- */
 function strToBt(str){
     var leng = str.length;
     var bt = new Array(64);
@@ -233,11 +212,6 @@ function strToBt(str){
     return bt;
 }
 
-/*
- * chang the bit(it's length = 4) into the hex
- *
- * return hex
- */
 function bt4ToHex(binary) {
     var hex;
     switch (binary) {
@@ -261,57 +235,6 @@ function bt4ToHex(binary) {
     return hex;
 }
 
-/*
- * chang the hex into the bit(it's length = 4)
- *
- * return the bit(it's length = 4)
- */
-function hexToBt4(hex) {
-    var binary;
-    switch (hex) {
-        case "0" : binary = "0000"; break;
-        case "1" : binary = "0001"; break;
-        case "2" : binary = "0010"; break;
-        case "3" : binary = "0011"; break;
-        case "4" : binary = "0100"; break;
-        case "5" : binary = "0101"; break;
-        case "6" : binary = "0110"; break;
-        case "7" : binary = "0111"; break;
-        case "8" : binary = "1000"; break;
-        case "9" : binary = "1001"; break;
-        case "A" : binary = "1010"; break;
-        case "B" : binary = "1011"; break;
-        case "C" : binary = "1100"; break;
-        case "D" : binary = "1101"; break;
-        case "E" : binary = "1110"; break;
-        case "F" : binary = "1111"; break;
-    }
-    return binary;
-}
-
-/*
- * chang the bit(it's length = 64) into the string
- *
- * return string
- */
-function byteToString(byteData){
-    var str="";
-    for(i = 0;i<4;i++){
-        var count=0;
-        for(j=0;j<16;j++){
-            var pow=1;
-            for(m=15;m>j;m--){
-                pow*=2;
-            }
-            count+=byteData[16*i+j]*pow;
-        }
-        if(count != 0){
-            str+=String.fromCharCode(count);
-        }
-    }
-    return str;
-}
-
 function bt64ToHex(byteData){
     var hex = "";
     for(i = 0;i<16;i++){
@@ -323,18 +246,6 @@ function bt64ToHex(byteData){
     }
     return hex;
 }
-
-function hexToBt64(hex){
-    var binary = "";
-    for(i = 0;i<16;i++){
-        binary+=hexToBt4(hex.substring(i,i+1));
-    }
-    return binary;
-}
-
-/*
- * the 64 bit des core arithmetic
- */
 
 function enc(dataByte,keyByte){
     var keys = generateKeys(keyByte);
@@ -361,42 +272,6 @@ function enc(dataByte,keyByte){
             ipRight[n] = tempRight[n];
         }
 
-    }
-
-
-    var finalData =new Array(64);
-    for(i = 0;i < 32;i ++){
-        finalData[i] = ipRight[i];
-        finalData[32+i] = ipLeft[i];
-    }
-    return finallyPermute(finalData);
-}
-
-function dec(dataByte,keyByte){
-    var keys = generateKeys(keyByte);
-    var ipByte   = initPermute(dataByte);
-    var ipLeft   = new Array(32);
-    var ipRight  = new Array(32);
-    var tempLeft = new Array(32);
-    var i = 0,j = 0,k = 0,m = 0, n = 0;
-    for(k = 0;k < 32;k ++){
-        ipLeft[k] = ipByte[k];
-        ipRight[k] = ipByte[32+k];
-    }
-    for(i = 15;i >= 0;i --){
-        for(j = 0;j < 32;j ++){
-            tempLeft[j] = ipLeft[j];
-            ipLeft[j] = ipRight[j];
-        }
-        var key = new Array(48);
-        for(m = 0;m < 48;m ++){
-            key[m] = keys[i][m];
-        }
-
-        var  tempRight = xor(pPermute(sBoxPermute(xor(expandPermute(ipRight),key))), tempLeft);
-        for(n = 0;n < 32;n ++){
-            ipRight[n] = tempRight[n];
-        }
     }
 
 
@@ -675,10 +550,7 @@ function getBoxBinary(i) {
     }
     return binary;
 }
-/*
- * generate 16 keys for xor
- *
- */
+
 function generateKeys(keyByte){
     var key   = new Array(56);
     var keys = new Array();
