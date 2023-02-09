@@ -1,17 +1,11 @@
-import js2py
+import pandas as pd
 
-random_key = "OqxQ1Iea4njSROH/N06Tuw=="
-def readJson(file_name):
-    with open(file_name, 'r', encoding='UTF-8') as file:
-        result = file.read()
-    return result
+list1 = [
+    {'姓名': '张艳珍', '生日': '1995-07-10', '电话': '13203738953', '地址': '成都市锦江区青和里南段55号六楼何晓玉'},
+    {'姓名': '刘俊惠', '生日': '1994-11-11', '电话': '19981251994', '地址': '四川省成都市'},
+    {'姓名': '魏海燕', '生日': '2000-03-01', '电话': '18780012231', '地址': '成都市锦江区青和里南段55号六楼蒙昌玲'}
+]
 
-
-js = readJson("./des.js")
-test = js2py.EvalJs()
-test.execute(js)
-sss = test.strEnc('Ouchn@2021',random_key)
-print(sss)
-# print(js)
-# test.execute(js)
-# print(test.strEnc('123','22222','',''))
+df = pd.DataFrame(columns=['姓名', '生日', '电话', '地址'])
+df.loc[1] = list1[1]
+df.to_csv('./girl.csv',encoding='utf_8_sig')
